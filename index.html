@@ -1,55 +1,148 @@
+# เขียน HTML เวอร์ชันสมบูรณ์ตามคำขอ พร้อมฟีเจอร์ทั้งหมด
+full_html = """
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>คำนวณราคาสุทธิ 7-Eleven Delivery</title>
-    <script defer>
-        function calculateNetPrice() {
-            let totalSales = Number(document.getElementById("totalSales").value);
-            let excludedAmount = Number(document.getElementById("excludedAmount").value);
-            let selectedDiscount = Number(document.getElementById("selectedDiscount").value);
-            let threshold = selectedDiscount === 50 ? 150 : 300; // กำหนด threshold ตามส่วนลด
-            let upsellAmount = totalSales - excludedAmount >= threshold ? 0 : threshold - (totalSales - excludedAmount);
-            let finalTotal = totalSales - excludedAmount + (upsellAmount > 0 ? upsellAmount : 0) - selectedDiscount;
-            
-            document.getElementById("upsellMessage").innerText = upsellAmount > 0 ? `🔥 แนะนำเพิ่มอีก ${upsellAmount} บาท เพื่อใช้ส่วนลด!` : "";
-            document.getElementById("finalTotal").innerText = `📊 ยอดรวมสุดท้าย: ${finalTotal} บาท`;
-        }
-    </script>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #FF6000; padding: 20px; text-align: center; color: white; }
-        .container { max-width: 400px; margin: auto; padding: 20px; background: white; border-radius: 10px; color: black; }
-        h2 { color: #008D36; }
-        input, select, button { width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        button { background-color: #008D36; color: white; font-weight: bold; border: none; cursor: pointer; }
-        button:hover { background-color: #005A24; }
-        #upsellMessage { color: #FF6000; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>7-Eleven Net Price App - Full Features</title>
+  <style>
+    body { font-family: sans-serif; background-color: #FFF8F0; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    h1 { color: #008D36; text-align: center; }
+    label, select, input, button { display: block; width: 100%; margin-bottom: 10px; padding: 8px; font-size: 1em; }
+    fieldset { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+    legend { font-weight: bold; }
+    .row { display: flex; gap: 10px; margin-bottom: 8px; }
+    .row > div { flex: 1; }
+    .right { text-align: right; font-size: 0.9em; color: #555; }
+    .orange { color: orange; font-weight: bold; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>คำนวณราคาสุทธิ - 7-Eleven Delivery</h2>
-        <label>💰 ยอดขายเริ่มต้น (บาท)</label>
-        <input type="number" id="totalSales" value="400" oninput="calculateNetPrice()">
-        
-        <label>🚫 ยอดสินค้าที่ไม่ร่วมรายการ (บาท)</label>
-        <input type="number" id="excludedAmount" value="150" oninput="calculateNetPrice()">
-        
-        <p id="upsellMessage"></p>
-        
-        <label>🎟️ เลือกโค้ดส่วนลด</label>
-        <select id="selectedDiscount" onchange="calculateNetPrice()">
-            <option value="50">ลูกค้าใหม่ (NEW) สั่ง 150 ลด 50 บาท</option>
-            <option value="15">วันจันทร์ : โฉบรับร้าน สั่ง 150 บาท 15 บาท</option>
-            <option value="30">วันพุธ : WED30 สั่ง 300 บาท 30 บาท</option>
-            <option value="40">วันเสาร์ : TMD40 สั่ง 300 บาท 40 บาท</option>
-            <option value="30">วันอาทิตย์ : SUN30 สั่ง 300 บาท 30 บาท</option>
-            <option value="0">ไม่มีส่วนลด</option>
-        </select>
-        
-        <h3 id="finalTotal">📊 ยอดรวมสุดท้าย: 270 บาท</h3>
-        <button onclick="alert('บันทึกการขายเรียบร้อย!')">บันทึกการขาย</button>
-    </div>
+<div class="container">
+  <div class="right" id="dateDisplay">กำลังโหลดวัน...</div>
+  <h1>คำนวณราคาสุทธิ</h1>
+
+  <label>📦 เลขออเดอร์</label>
+  <input type="text" id="orderId" placeholder="กรอกเลขออเดอร์">
+
+  <label>💰 ยอดขายเริ่มต้น (บาท)</label>
+  <input type="number" id="totalSales" value="0" oninput="calculateNetPrice()">
+
+  <fieldset>
+    <legend>🚫 สินค้าไม่ร่วมรายการ</legend>
+    <div id="excludedList"></div>
+    <label>รวมราคาสินค้าไม่ร่วมรายการ (บาท)</label>
+    <input type="number" id="excludedAmount" value="0" readonly>
+  </fieldset>
+
+  <fieldset>
+    <legend>🎟️ โค้ดส่วนลดที่ใช้ได้วันนี้</legend>
+    <select id="discountCode" onchange="calculateNetPrice()">
+      <option value="NEW|150|50">ลูกค้าใหม่ (NEW) สั่ง 150 ลด 50 บาท</option>
+    </select>
+    <label>ใส่โค้ดส่วนลดพิเศษ (จากส่วนกลางถ้ามี)</label>
+    <input type="text" id="customCode" placeholder="เช่น SPECIAL30">
+    <label>ส่วนลดพิเศษ (บาท)</label>
+    <input type="number" id="customDiscount" value="0" oninput="calculateNetPrice()">
+  </fieldset>
+
+  <div class="orange" id="upsellMsg"></div>
+  <h2 id="finalTotal">📊 ยอดรวมสุดท้าย: 0 บาท</h2>
+
+  <button onclick="saveOrder()">💾 บันทึกข้อมูล (ดูผลลัพธ์ใน console)</button>
+</div>
+
+<script>
+const items = {
+  "หมวดทั่วไป": ["โทรศัพท์เคลื่อนที่", "ซิม", "กลุ่มเติมเงินโทรศัพท์-เกมส์", "ยาและเวชภัณฑ์", "บริการกล่องพร้อมส่ง", "สินค้าการกุศล ทุกชนิด", "Chester -HUB", "ถุงทนทาน", "สินค้าอิเล็กทรอนิกส์", "สินค้าพรีเมียม"],
+  "หมวดเครื่องครัว เครื่องปรุง": ["ข้าวหอมผสมตราฉัตร", "ข้าวเกรดคุณภาพตราฉัตร (ชมพู) 5กก.", "โรซ่าซอสมะเขือเทศ 1 กก.", "น้ำตาล 500 กรัมและ 1 กก.", "น้ำตาลเบเกอรี 1 กก.", "น้ำมันปาล์ม น้ำมันถั่วเหลือง", "ผงชูรส", "ซอสหอยนางรม", "น้ำปลาทิพรส 700 มล.", "ซุปผงรสดี 850ก."],
+  "เครื่องดื่มชูกำลัง": ["เอ็ม-150", "กระทิงแดง", "กาแฟเบอร์ดี้", "คาราบาวแดง", "สปอนเซอร์"],
+  "กลุ่มผลิตภัณฑ์นม": ["นม UHT แบรนด์ดัชมิลล์ ดีน่า ดีมอลต์ โปรแลค และโฟร์โมสต์", "นมสเตอริไลท์ตราหมี", "นมผงสำหรับเด็กทารก", "นมผงสูตร 1 และ สูตร 2"],
+  "หมวดเครื่องดื่ม": ["ชาชงสมุนไพร", "น้ำหวานเฮลบลูบอย", "โซดาสิงห์", "ชาชงสมุนไพรฟิตเน่", "เนสกาแฟเรดคัพ", "คาร์เนชั่น"]
+};
+
+function renderExcludedList() {
+  const container = document.getElementById("excludedList");
+  for (const [category, products] of Object.entries(items)) {
+    const box = document.createElement("fieldset");
+    const legend = document.createElement("legend");
+    legend.textContent = category;
+    box.appendChild(legend);
+    products.forEach(product => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div><input type='checkbox' onchange='updateExcludedTotal()'> ${product}</div>
+        <div><input type='number' placeholder='ราคา' oninput='updateExcludedTotal()'></div>
+      `;
+      box.appendChild(row);
+    });
+    container.appendChild(box);
+  }
+}
+
+function updateExcludedTotal() {
+  let total = 0;
+  document.querySelectorAll("#excludedList fieldset").forEach(field => {
+    field.querySelectorAll("input[type='checkbox']").forEach((cb, i) => {
+      if (cb.checked) {
+        const price = parseFloat(field.querySelectorAll("input[type='number']")[i].value) || 0;
+        total += price;
+      }
+    });
+  });
+  document.getElementById("excludedAmount").value = total;
+  calculateNetPrice();
+}
+
+function calculateNetPrice() {
+  const total = parseFloat(document.getElementById("totalSales").value) || 0;
+  const excluded = parseFloat(document.getElementById("excludedAmount").value) || 0;
+  const customDiscount = parseFloat(document.getElementById("customDiscount").value) || 0;
+  const discountInfo = document.getElementById("discountCode").value.split("|");
+  const threshold = parseFloat(discountInfo[1]);
+  const discount = parseFloat(discountInfo[2]);
+  const net = total - excluded;
+  const upsell = net >= threshold ? 0 : threshold - net;
+  const final = net + upsell - discount - customDiscount;
+
+  document.getElementById("upsellMsg").textContent = upsell > 0 ? `🔥 เพิ่มอีก ${upsell} บาท เพื่อใช้ส่วนลด` : "";
+  document.getElementById("finalTotal").textContent = `📊 ยอดรวมสุดท้าย: ${final} บาท`;
+}
+
+function saveOrder() {
+  const data = {
+    orderId: document.getElementById("orderId").value,
+    totalSales: document.getElementById("totalSales").value,
+    excludedAmount: document.getElementById("excludedAmount").value,
+    discountCode: document.getElementById("discountCode").value,
+    customCode: document.getElementById("customCode").value,
+    customDiscount: document.getElementById("customDiscount").value,
+    finalTotal: document.getElementById("finalTotal").textContent
+  };
+  console.log("📦 ข้อมูลที่บันทึก:", data);
+  alert("✅ บันทึกข้อมูลเรียบร้อย! (ดูใน console/log)");
+}
+
+function setupDateAndDiscount() {
+  const now = new Date();
+  const days = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+  document.getElementById("dateDisplay").textContent = `วัน${days[now.getDay()]}ที่ ${now.getDate()} ${now.toLocaleString("th-TH", { month: "long" })} ${now.getFullYear() + 543}`;
+  const select = document.getElementById("discountCode");
+  const day = now.getDay();
+  if (day === 1) select.innerHTML += `<option value="MONDAY|150|15">MONDAY สั่ง 150 บาท ลด 15 บาท</option>`;
+  if (day === 3) select.innerHTML += `<option value="WED30|300|30">WED30 สั่ง 300 บาท ลด 30 บาท</option>`;
+  if (day === 6) select.innerHTML += `<option value="TMD40|300|40">TMD40 สั่ง 300 บาท ลด 40 บาท</option>`;
+  if (day === 0) select.innerHTML += `<option value="SUN30|300|30">SUN30 สั่ง 300 บาท ลด 30 บาท</option>`;
+}
+
+window.onload = () => {
+  setupDateAndDiscount();
+  renderExcludedList();
+  calculateNetPrice();
+};
+</script>
 </body>
 </html>
